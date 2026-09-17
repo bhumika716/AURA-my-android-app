@@ -54,7 +54,7 @@ AURA is an Android application that helps users understand their emotions, refle
 
 ## 👩‍💻 Developer
 
-**Bhumika**  
+**Bhumika Garg**  
 [GitHub](https://github.com/bhumika716)
 
 ---
