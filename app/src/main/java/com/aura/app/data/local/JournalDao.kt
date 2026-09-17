@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface JournalDao {
 
     @Insert
-    suspend fun insertEntry(entry: JournalEntry)
+    suspend fun insertEntry(entry: JournalEntry): Long
 
     @Update
     suspend fun updateEntry(entry: JournalEntry)
