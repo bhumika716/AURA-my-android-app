@@ -75,6 +75,7 @@ fun AuraNavGraph(
         Screen.Missions.route,
         Screen.Journal.route,
         Screen.Avatar.route,
+        Screen.Mirror.route,
     )
 
     Scaffold(
@@ -84,18 +85,17 @@ fun AuraNavGraph(
                 AuraBottomBar(
                     currentRoute = currentRoute ?: "",
                     onNavigate = { route ->
-                        if (currentRoute != route) {
+                        if (route == Screen.Dashboard.route) {
+                            navController.popBackStack(
+                                Screen.Dashboard.route,
+                                inclusive = false
+                            )
+                        } else if (currentRoute != route) {
                             navController.navigate(route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
-                                // on the back stack as users select items
-                                popUpTo(navController.graph.startDestinationId) {
+                                popUpTo(Screen.Dashboard.route) {
                                     saveState = true
                                 }
-                                // Avoid multiple copies of the same destination when
-                                // reselecting the same item
                                 launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
                                 restoreState = true
                             }
                         }
