@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.map
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
@@ -16,6 +17,14 @@ class UserViewModel @Inject constructor(
 
     val userProfile: StateFlow<UserProfile?> = repository.userProfile
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val isProfileLoaded: StateFlow<Boolean> = repository.userProfile
+    .map { true }
+    .stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        false
+    )
 
     private val _stageUpEvent = MutableSharedFlow<Int>()
     val stageUpEvent: SharedFlow<Int> = _stageUpEvent.asSharedFlow()

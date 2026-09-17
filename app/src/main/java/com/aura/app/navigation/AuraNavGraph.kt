@@ -44,11 +44,11 @@ fun AuraNavGraph(
 ) {
     val navController = rememberNavController()
     val userProfile by userViewModel.userProfile.collectAsState()
+    val isProfileLoaded by userViewModel.isProfileLoaded.collectAsState()
     
     // Check if we are still loading the profile to avoid redirecting to Onboarding incorrectly
-    if (userProfile == null) {
-        // You could return a LoadingScreen() here, or just a blank Surface
-        return
+    if (!isProfileLoaded) {
+    return
     }
     
     val hasOnboarded = userProfile?.hasOnboarded ?: false
