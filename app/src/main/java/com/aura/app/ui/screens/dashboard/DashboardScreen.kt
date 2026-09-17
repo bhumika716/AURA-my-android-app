@@ -33,6 +33,7 @@ import java.time.LocalTime
 @Composable
 fun DashboardScreen(
     userProfile: UserProfile?,
+    latestMood: String? = null,
     onNavigateToSocialLab: () -> Unit,
     onNavigateToMissions: () -> Unit,
     onNavigateToAvatar: () -> Unit,
@@ -143,6 +144,38 @@ fun DashboardScreen(
                 label = "Sessions",
                 modifier = Modifier.weight(1f),
             )
+        }
+
+        // Daily Mood Challenge
+        AdaptiveCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "🌱 Daily Mood Challenge",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                val challengeText = when (latestMood?.lowercase()) {
+                    "sad" -> "Take 2 minutes to write 3 things you are grateful for."
+                    "anxious" -> "Try 1 minute of slow breathing and relax your mind."
+                    "happy" -> "Write one positive moment from today."
+                    "excited" -> "Write one goal you feel excited to achieve."
+                    "calm" -> "Spend 2 minutes enjoying your peaceful surroundings."
+                    "angry" -> "Take 3 deep breaths and write what triggered you."
+                    "neutral" -> "Reflect on one thing you learned today."
+                    else -> "Select a mood in your journal to get a challenge."
+                }
+
+                Text(
+                    text = challengeText,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
 
         // ── Feature Cards ──

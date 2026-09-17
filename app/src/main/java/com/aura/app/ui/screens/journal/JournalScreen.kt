@@ -121,7 +121,9 @@ fun JournalScreen(
         ComposeEntryDialog(
             draftText = uiState.draftText,
             onTextChange = { viewModel.updateDraft(it) },
-            onSubmit = { viewModel.submitEntry() },
+            onSubmit = { mood, emoji ->
+                viewModel.submitEntry(mood, emoji)
+            },
             onDismiss = { viewModel.cancelWriting() },
         )
     }
@@ -337,7 +339,7 @@ private fun EmptyJournalState() {
 private fun ComposeEntryDialog(
     draftText: String,
     onTextChange: (String) -> Unit,
-    onSubmit: () -> Unit,
+    onSubmit: (String, String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
@@ -364,6 +366,42 @@ private fun ComposeEntryDialog(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
 
+                Text(
+                    text = "Select your mood",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+
+                val moodOptions = listOf(
+                    "😊" to "happy",
+                    "😔" to "sad",
+                    "😟" to "anxious",
+                    "🤩" to "excited",
+                    "😌" to "calm",
+                    "😡" to "angry",
+                    "😐" to "neutral",
+                )
+
+                var selectedMood by remember { mutableStateOf<String?>(null) }
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    items(moodOptions) { (emoji, mood) ->
+                        FilterChip(
+                            selected = selectedMood == mood,
+                            onClick = { selectedMood = mood },
+                            label = {
+                                Text("$emoji ${mood.replaceFirstChar { it.uppercase() }}")
+                            },
+                        )
+                    }
+                }
+                val selectedEmoji = moodOptions
+                    .firstOrNull { it.second == selectedMood }
+                    ?.first
+
                 OutlinedTextField(
                     value = draftText,
                     onValueChange = onTextChange,
@@ -386,10 +424,14 @@ private fun ComposeEntryDialog(
                         Text("Cancel")
                     }
                     Button(
-                        onClick = onSubmit,
+                        onClick = {
+                            if (selectedMood != null && selectedEmoji != null) {
+                                onSubmit(selectedMood!!, selectedEmoji!!)
+                            }
+                        },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        enabled = draftText.length >= 10,
+                        enabled = draftText.length >= 10 && selectedMood != null,
                     ) {
                         Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))

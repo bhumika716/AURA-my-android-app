@@ -18,6 +18,7 @@ data class JournalUiState(
     val isAnalyzing: Boolean = false,
     val draftText: String = "",
     val latestInsight: String? = null,
+    val latestMood: String? = null,
     val averageMoodWeek: Float? = null,
     val averageMoodMonth: Float? = null,
     val totalEntries: Int = 0,
@@ -41,8 +42,20 @@ class JournalViewModel @Inject constructor(
 
     private fun loadEntries() {
         viewModelScope.launch {
+            journalRepository.latestEntry.collect { entry ->
+                _uiState.update {
+                    it.copy(
+                        latestMood = entry?.primaryMood
+                    )
+                }
+            }
+        }
+
+        viewModelScope.launch {
             journalRepository.getRecentEntries(50).collect { entries ->
-                _uiState.update { it.copy(entries = entries) }
+                _uiState.update {
+                    it.copy(entries = entries)
+                }
             }
         }
     }
@@ -84,15 +97,24 @@ class JournalViewModel @Inject constructor(
         _uiState.update { it.copy(draftText = text) }
     }
 
-    fun submitEntry() {
+    fun submitEntry(selectedMood: String, selectedEmoji: String) {
         val text = _uiState.value.draftText.trim()
         if (text.isBlank()) return
 
-        _uiState.update { it.copy(isAnalyzing = true, isWriting = false) }
+        _uiState.update {
+            it.copy(
+                isAnalyzing = true,
+                isWriting = false
+            )
+        }
 
         viewModelScope.launch {
             try {
-                val entry = journalRepository.saveAndAnalyze(text)
+                val entry = journalRepository.saveAndAnalyze(
+                    rawText = text,
+                    selectedMood = selectedMood,
+                    selectedEmoji = selectedEmoji,
+                )
 
                 // Award XP for journaling
                 userRepository.awardXP(20)
@@ -107,8 +129,11 @@ class JournalViewModel @Inject constructor(
 
                 // Refresh stats
                 loadStats()
+
             } catch (e: Exception) {
-                _uiState.update { it.copy(isAnalyzing = false) }
+                _uiState.update {
+                    it.copy(isAnalyzing = false)
+                }
             }
         }
     }

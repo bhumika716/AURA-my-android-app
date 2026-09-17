@@ -20,6 +20,7 @@ class JournalRepository @Inject constructor(
     private val geminiApi: GeminiApiService,
 ) {
     val allEntries: Flow<List<JournalEntry>> = journalDao.getAllEntries()
+    val latestEntry: Flow<JournalEntry?> = journalDao.getLatestEntry()
 
     fun getRecentEntries(limit: Int = 30): Flow<List<JournalEntry>> =
         journalDao.getRecentEntries(limit)
@@ -36,7 +37,11 @@ class JournalRepository @Inject constructor(
      * Saves a new journal entry and runs Gemini sentiment analysis on the text.
      * First saves immediately with defaults, then updates with AI results.
      */
-    suspend fun saveAndAnalyze(rawText: String): JournalEntry {
+    suspend fun saveAndAnalyze(
+        rawText: String,
+        selectedMood: String,
+        selectedEmoji: String,
+    ): JournalEntry {
         // 1. Save immediately so user sees their entry right away
         val entry = JournalEntry(rawText = rawText)
 
@@ -51,8 +56,8 @@ class JournalRepository @Inject constructor(
         return try {
             val analysisResult = analyzeSentiment(rawText)
             val updatedEntry = savedEntry.copy(
-                primaryMood = analysisResult.mood,
-                moodEmoji = analysisResult.emoji,
+                primaryMood = selectedMood,
+                moodEmoji = selectedEmoji,
                 moodScore = analysisResult.score,
                 energyLevel = analysisResult.energy,
                 burnoutScore = analysisResult.burnout,
@@ -66,8 +71,8 @@ class JournalRepository @Inject constructor(
             val localResult = analyzeLocally(rawText)
 
             val updatedEntry = savedEntry.copy(
-                primaryMood = localResult.mood,
-                moodEmoji = localResult.emoji,
+                primaryMood = selectedMood,
+                moodEmoji = selectedEmoji,
                 moodScore = localResult.score,
                 energyLevel = localResult.energy,
                 burnoutScore = localResult.burnout,
@@ -154,29 +159,29 @@ class JournalRepository @Inject constructor(
         val lowerText = text.lowercase()
 
         return when {
-            listOf("happy", "great", "excited", "good", "joy")
+            listOf("happy", "great", "excited", "good", "joy", "khush")
                 .any { lowerText.contains(it) } -> {
                 SentimentResult(
                     mood = "happy",
                     emoji = "😊",
                     score = 80,
                     energy = "high",
-                    insight = "It sounds like you are experiencing some positive moments. Keep noticing what brings you joy."
+                    insight = "Your journal reflects positivity. Notice what made you happy today and try to create more moments like this."
                 )
             }
 
-            listOf("sad", "upset", "lonely", "bad", "cry")
+            listOf("sad", "upset", "lonely", "bad", "cry", "dukhi")
                 .any { lowerText.contains(it) } -> {
                 SentimentResult(
                     mood = "sad",
                     emoji = "😔",
                     score = 30,
                     energy = "low",
-                    insight = "Thank you for sharing your feelings. Give yourself time and kindness as you process them."
+                    insight = "You seem to be going through a difficult moment. Be gentle with yourself and take one small step toward feeling better."
                 )
             }
 
-            listOf("stress", "stressed", "anxious", "worried", "tension")
+            listOf("stress", "stressed", "anxious", "worried", "tension", "pareshan")
                 .any { lowerText.contains(it) } -> {
                 SentimentResult(
                     mood = "anxious",
@@ -184,7 +189,40 @@ class JournalRepository @Inject constructor(
                     score = 40,
                     energy = "medium",
                     burnout = 50,
-                    insight = "It sounds like things may feel overwhelming. Take a small pause and focus on what you can manage right now."
+                    insight = "You may be feeling overwhelmed. Try taking a short break and focus on one manageable task at a time."
+                )
+            }
+
+            listOf("angry", "anger", "frustrated", "gussa", "irritated")
+                .any { lowerText.contains(it) } -> {
+                SentimentResult(
+                    mood = "angry",
+                    emoji = "😡",
+                    score = 35,
+                    energy = "high",
+                    insight = "Strong emotions can feel intense. Take a pause, breathe slowly, and reflect on what you need right now."
+                )
+            }
+
+            listOf("calm", "peaceful", "relaxed", "shant")
+                .any { lowerText.contains(it) } -> {
+                SentimentResult(
+                    mood = "calm",
+                    emoji = "😌",
+                    score = 75,
+                    energy = "medium",
+                    insight = "Your thoughts show a sense of calm. Take a moment to appreciate this peaceful feeling."
+                )
+            }
+
+            listOf("excited", "thrilled", "utsahit")
+                .any { lowerText.contains(it) } -> {
+                SentimentResult(
+                    mood = "excited",
+                    emoji = "🤩",
+                    score = 85,
+                    energy = "high",
+                    insight = "Your excitement can be a source of motivation. Use this positive energy toward something meaningful."
                 )
             }
 
@@ -194,12 +232,11 @@ class JournalRepository @Inject constructor(
                     emoji = "😐",
                     score = 50,
                     energy = "medium",
-                    insight = "Thank you for sharing your thoughts. Taking time to reflect is a meaningful step toward self-awareness."
+                    insight = "Your journal gives you space to understand your thoughts. Notice one feeling or thought that stood out today."
                 )
             }
         }
     }
-
     suspend fun deleteEntry(entry: JournalEntry) = journalDao.deleteEntry(entry)
 }
 

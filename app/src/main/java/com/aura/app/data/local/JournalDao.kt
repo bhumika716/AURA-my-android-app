@@ -19,6 +19,9 @@ interface JournalDao {
     @Query("SELECT * FROM journal_entries ORDER BY createdAt DESC LIMIT :limit")
     fun getRecentEntries(limit: Int): Flow<List<JournalEntry>>
 
+    @Query("SELECT * FROM journal_entries ORDER BY createdAt DESC LIMIT 1")
+    fun getLatestEntry(): Flow<JournalEntry?>
+
     @Query("SELECT * FROM journal_entries WHERE createdAt > :since ORDER BY createdAt ASC")
     fun getEntriesSince(since: Long): Flow<List<JournalEntry>>
 

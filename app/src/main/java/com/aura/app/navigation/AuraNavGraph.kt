@@ -21,6 +21,8 @@ import com.aura.app.ui.screens.onboarding.OnboardingScreen
 import com.aura.app.ui.screens.sociallab.ChatScreen
 import com.aura.app.ui.screens.sociallab.SocialLabScreen
 import com.aura.app.viewmodel.UserViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.aura.app.viewmodel.JournalViewModel
 
 sealed class Screen(val route: String) {
     object Onboarding : Screen("onboarding")
@@ -44,6 +46,8 @@ fun AuraNavGraph(
 ) {
     val navController = rememberNavController()
     val userProfile by userViewModel.userProfile.collectAsState()
+    val journalViewModel: JournalViewModel = hiltViewModel()
+    val journalUiState by journalViewModel.uiState.collectAsState()
     val isProfileLoaded by userViewModel.isProfileLoaded.collectAsState()
     
     // Check if we are still loading the profile to avoid redirecting to Onboarding incorrectly
@@ -127,6 +131,7 @@ fun AuraNavGraph(
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
                     userProfile = userProfile,
+                    latestMood = journalUiState.latestMood,
                     onNavigateToSocialLab = { navController.navigate(Screen.SocialLab.route) },
                     onNavigateToMissions = { navController.navigate(Screen.Missions.route) },
                     onNavigateToAvatar = { navController.navigate(Screen.Avatar.route) },
